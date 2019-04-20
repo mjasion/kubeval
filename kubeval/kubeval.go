@@ -49,10 +49,11 @@ func (f ValidFormat) IsFormat(input interface{}) bool {
 // ValidationResult contains the details from
 // validating a given Kubernetes resource
 type ValidationResult struct {
-	FileName   string
-	Kind       string
-	APIVersion string
-	Errors     []gojsonschema.ResultError
+	FileName        string
+	Kind            string
+	APIVersion      string
+	Errors          []gojsonschema.ResultError
+	ValidatedObject map[string]interface{}
 }
 
 // detectLineBreak returns the relevant platform specific line ending
@@ -165,6 +166,7 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 	if len(cast) == 0 {
 		return result, nil
 	}
+	result.ValidatedObject = cast
 
 	documentLoader := gojsonschema.NewGoLoader(body)
 
