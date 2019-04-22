@@ -54,6 +54,7 @@ type ValidationResult struct {
 	APIVersion      string
 	Errors          []gojsonschema.ResultError
 	ValidatedObject map[string]interface{}
+	PlainObjectYaml []byte
 }
 
 // detectLineBreak returns the relevant platform specific line ending
@@ -151,6 +152,7 @@ func validateResource(data []byte, fileName string) (ValidationResult, error) {
 	var spec interface{}
 	result := ValidationResult{}
 	result.FileName = fileName
+	result.PlainObjectYaml = data
 	err := yaml.Unmarshal(data, &spec)
 	if err != nil {
 		return result, errors.New("Failed to decode YAML from " + fileName)
