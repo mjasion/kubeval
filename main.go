@@ -1,6 +1,6 @@
 package main
 
-import "github.com/instrumenta/kubeval/cmd"
+import "github.com/mjasion/kubeval/cmd"
 
 func main() {
 	cmd.Execute()

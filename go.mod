@@ -1,4 +1,4 @@
-module github.com/instrumenta/kubeval
+module github.com/mjasion/kubeval
 
 go 1.12
 
