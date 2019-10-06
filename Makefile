@@ -4,15 +4,6 @@ PACKAGE_NAME=github.com/instrumenta/$(NAME)
 GOFMT_FILES?=$$(find . -name '*.go' | grep -v vendor)
 TAG=$(shell git describe --abbrev=0 --tags)
 
-LDFLAGS += -X "$(PACKAGE_NAME)/version.BuildTime=$(shell date -u '+%Y-%m-%d %I:%M:%S %Z')"
-LDFLAGS += -X "$(PACKAGE_NAME)/version.BuildVersion=$(shell git describe --abbrev=0 --tags)"
-LDFLAGS += -X "$(PACKAGE_NAME)/version.BuildSHA=$(shell git rev-parse HEAD)"
-# Strip debug information
-LDFLAGS += -s
-
-ifeq ($(OS),Windows_NT)
-	suffix := .exe
-endif
 
 all: build
 
@@ -46,16 +37,12 @@ lint: $(GOPATH)/bin/golint$(suffix)
 docker:
 	docker build -t $(IMAGE_NAME):$(TAG) .
 	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):latest
+	docker push $(IMAGE_NAME):$(TAG)
+	docker push $(IMAGE_NAME):latest
 
 docker-offline:
 	docker build -f Dockerfile.offline -t $(IMAGE_NAME):$(TAG)-offline .
 	docker tag $(IMAGE_NAME):$(TAG)-offline $(IMAGE_NAME):offline
-
-publish: docker docker-offline
-	docker push $(IMAGE_NAME):$(TAG)
-	docker push $(IMAGE_NAME):latest
-	docker push $(IMAGE_NAME):$(TAG)-offline
-	docker push $(IMAGE_NAME):offline
 
 vet:
 	go vet
@@ -81,19 +68,10 @@ clean:
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
-checksum-windows-386:
-	cd dist && sha256sum $(NAME)-windows-386.zip
+dist/$(NAME)-checksum-%:
+	cd dist && sha256sum $@.zip
 
-checksum-windows-amd64:
-	cd dist && sha256sum $(NAME)-windows-amd64.zip
-
-checksum-darwin:
-	cd dist && sha256sum $(NAME)-darwin-amd64.zip
-
-checksum-linux:
-	cd dist && sha256sum $(NAME)-linux-amd64.zip
-
-checksums: checksum-darwin checksum-windows-386 checksum-windows-amd64 checksum-linux
+checksums: dist/$(NAME)-checksum-darwin-amd64 dist/$(NAME)-checksum-windows-386 dist/$(NAME)-checksum-windows-amd64 dist/$(NAME)-checksum-linux-amd64
 
 chocolatey/$(NAME)/$(NAME).$(TAG).nupkg: chocolatey/$(NAME)/$(NAME).nuspec
 	cd chocolatey/$(NAME) && choco pack
@@ -101,4 +79,4 @@ chocolatey/$(NAME)/$(NAME).$(TAG).nupkg: chocolatey/$(NAME)/$(NAME).nuspec
 choco:
 	cd chocolatey/$(NAME) && choco push $(NAME).$(TAG).nupkg -s https://chocolatey.org/
 
-.PHONY: release snapshot fmt clean cover acceptance lint docker test vet watch build check checksum-windows-386 checksum-windows-amd64 checksum-darwin checksum-linux choco checksum
+.PHONY: release snapshot fmt clean cover acceptance lint docker test vet watch build check choco checksums
